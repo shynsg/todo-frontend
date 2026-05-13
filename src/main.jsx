@@ -1,9 +1,31 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { datadogRum } from "@datadog/browser-rum";
 import { createRoot } from "react-dom/client";
 import { Check, Plus, RefreshCw, Trash2 } from "lucide-react";
 import "./styles.css";
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
+
+datadogRum.init({
+  applicationId: import.meta.env.VITE_DD_RUM_APPLICATION_ID || "a1432b80-8baf-4e21-9572-61360e5ed6de",
+  clientToken: import.meta.env.VITE_DD_RUM_CLIENT_TOKEN || "pubca550527baba8b28bc73e591d12898a1",
+  site: import.meta.env.VITE_DD_SITE || "us5.datadoghq.com",
+  service: import.meta.env.VITE_DD_SERVICE || "todo-frontend",
+  env: import.meta.env.VITE_DD_ENV || "prod",
+  version: import.meta.env.VITE_DD_VERSION || "v0.0.2",
+  sessionSampleRate: 100,
+  sessionReplaySampleRate: 20,
+  trackUserInteractions: true,
+  trackResources: true,
+  trackLongTasks: true,
+  defaultPrivacyLevel: "mask-user-input",
+  allowedTracingUrls: [
+    (url) => {
+      const requestUrl = typeof url === "string" ? url : url.toString();
+      return requestUrl.includes("/api");
+    }
+  ]
+});
 
 function App() {
   const [todos, setTodos] = useState([]);
