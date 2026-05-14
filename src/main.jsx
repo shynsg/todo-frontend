@@ -32,6 +32,7 @@ function App() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [traceDemo, setTraceDemo] = useState(null);
 
   const openCount = useMemo(() => todos.filter((todo) => !todo.completed).length, [todos]);
 
@@ -97,6 +98,40 @@ function App() {
     await loadTodos();
   }
 
+  async function runTraceDemo() {
+    setTraceDemo({
+      status: "running",
+      message: "Generating Datadog trace..."
+    });
+
+    const response = await fetch(`${apiBase}/trace-demo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: `Datadog trace demo ${new Date().toISOString()}`
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setTraceDemo({
+        status: "error",
+        message: data.error || "Trace demo failed"
+      });
+      return;
+    }
+
+    setTraceDemo({
+      status: "done",
+      message: `Created todo #${data.todo.id}; total todos: ${data.stats.total}`
+    });
+
+    await loadTodos();
+  }
+
   useEffect(() => {
     loadTodos();
   }, []);
@@ -119,6 +154,16 @@ function App() {
           <span>{openCount} open</span>
           <span>{todos.length - openCount} done</span>
         </div>
+
+        <div className="traceBox">
+          <div>
+            <strong>Datadog trace demo</strong>
+            <p>Creates a todo, touches Postgres/Redis, calls stats, and writes structured logs.</p>
+          </div>
+          <button type="button" onClick={runTraceDemo}>Run trace</button>
+        </div>
+
+        {traceDemo ? <p className={traceDemo.status === "error" ? "error" : "muted"}>{traceDemo.message}</p> : null}
 
         <form className="form" onSubmit={createTodo}>
           <input
